@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block main %}
+{% if not verified %}
+<p class="banner warn" role="status">Please verify your email address. Open the link we sent to {{ email }}.</p>
+{% endif %}
+<h1>{{ company }}</h1>
+<dl class="facts">
+  <dt>Signed in as</dt><dd>{{ email }}</dd>
+  <dt>Role</dt><dd>{{ role }}</dd>
+</dl>
+{% if role == "owner" %}
+<p><a href="/team">Team and invitations</a></p>
+{% endif %}
+<p><a href="/jobs">Quotes: the jobs and their drawings</a></p>
+<form method="post" action="/logout">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button type="submit" class="secondary">Sign out</button>
+</form>
+{% endblock %}

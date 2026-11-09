@@ -1,0 +1,151 @@
+name: quoteops
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qo_owner
+      POSTGRES_DB: quoteops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in deploy/.env}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks: [internal]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qo_owner -d quoteops"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Also runs the administrator commands on the server, with the owner login:
+  #   docker compose -p quoteops -f deploy/compose.yaml run --rm migrate python -m quoteops create-admin <email>
+  migrate:
+    build: ..
+    image: quoteops-web:local
+    command: ["python", "-m", "quoteops", "migrate"]
+    restart: "no"
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      QO_DB_HOST: db
+      QO_DB_NAME: quoteops
+      QO_OWNER_USER: qo_owner
+      QO_OWNER_PASSWORD: ${POSTGRES_PASSWORD:?set it in deploy/.env}
+      QO_WEB_PASSWORD: ${QO_WEB_PASSWORD:?set it in deploy/.env}
+      QO_ADMIN_PASSWORD: ${QO_ADMIN_PASSWORD:?set it in deploy/.env}
+    networks: [internal]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ..
+    image: quoteops-web:local
+    restart: unless-stopped
+    read_only: true
+    # /var/qo-mail: the file mail backend (QO_MAIL=file, the default; development and tests),
+    # gone on restart. QO_MAIL=graph sends through Microsoft Graph and needs the four variables
+    # below; the admin and migrate services get none of them.
+    tmpfs: [/tmp, "/var/qo-mail:mode=0700,uid=10001,gid=10001"]
+    # Stage 3a: the drawings, one folder per company with random names. Only this service mounts
+    # the volume; admin and migrate never see a file. The image creates /var/qo-files owned by
+    # the container user (10001), and a new named volume takes that ownership; the root
+    # filesystem stays read-only.
+    volumes:
+      - qofiles:/var/qo-files
+    environment:
+      QO_DB_HOST: db
+      QO_DB_NAME: quoteops
+      QO_WEB_PASSWORD: ${QO_WEB_PASSWORD:?set it in deploy/.env}
+      QO_SECRET: ${QO_SECRET:?set it in deploy/.env}
+      QO_BASE_URL: ${QO_BASE_URL:?set it in deploy/.env}
+      QO_MAIL: ${QO_MAIL:-file}
+      QO_MAIL_DIR: /var/qo-mail
+      QO_GRAPH_TENANT: ${QO_GRAPH_TENANT:-}
+      QO_GRAPH_CLIENT_ID: ${QO_GRAPH_CLIENT_ID:-}
+      QO_GRAPH_CLIENT_SECRET: ${QO_GRAPH_CLIENT_SECRET:-}
+      QO_MAIL_FROM: ${QO_MAIL_FROM:-}
+      QO_COOKIE_SECURE: ${QO_COOKIE_SECURE:-true}
+      QO_CLIENT_IP_HEADER: ${QO_CLIENT_IP_HEADER:-}
+      QO_MAX_COMPANIES: ${QO_MAX_COMPANIES:-20}
+      QO_SIGNUP_PER_EMAIL: ${QO_SIGNUP_PER_EMAIL:-3}
+      # scrypt computations at once (32 MiB each: 3 is about 100 MB of the 512m limit), and how
+      # long a request waits for one before the answer is 503 "busy".
+      QO_SCRYPT_CONCURRENCY: ${QO_SCRYPT_CONCURRENCY:-3}
+      QO_SCRYPT_WAIT_SECONDS: ${QO_SCRYPT_WAIT_SECONDS:-8}
+      QO_UNVERIFIED_MAX_AGE_HOURS: ${QO_UNVERIFIED_MAX_AGE_HOURS:-72}
+      QO_UNVERIFIED_KEEP: ${QO_UNVERIFIED_KEEP:-500}
+      # Users plus pending invitations per company (PRD section 6), and invitation limits.
+      QO_MAX_USERS_PER_COMPANY: ${QO_MAX_USERS_PER_COMPANY:-5}
+      QO_INVITES_PER_DAY: ${QO_INVITES_PER_DAY:-20}
+      QO_INVITES_PER_ADDRESS_PER_DAY: ${QO_INVITES_PER_ADDRESS_PER_DAY:-3}
+      # Drawing uploads (PRD section 6): MB per file (1 to 200), MB per company (1 to 100000),
+      # jobs per calendar month in UTC (1 to 100000). One MB is 1048576 bytes.
+      QO_FILES_DIR: /var/qo-files
+      QO_MAX_FILE_MB: ${QO_MAX_FILE_MB:-25}
+      QO_MAX_COMPANY_MB: ${QO_MAX_COMPANY_MB:-500}
+      QO_MAX_JOBS_PER_MONTH: ${QO_MAX_JOBS_PER_MONTH:-50}
+    networks: [internal, edge]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8091/healthz', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Stage 2b part 2: the administrator's service, a second application in the same image. It
+  # logs in to PostgreSQL only as qo_admin and gets neither the web password nor QO_SECRET nor
+  # the mail settings; the web service gets none of these admin variables.
+  admin:
+    build: ..
+    image: quoteops-web:local
+    command: ["uvicorn", "quoteops.admin_app:app", "--host", "0.0.0.0", "--port", "8092", "--no-access-log"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      QO_DB_HOST: db
+      QO_DB_NAME: quoteops
+      QO_ADMIN_PASSWORD: ${QO_ADMIN_PASSWORD:?set it in deploy/.env}
+      QO_ADMIN_SECRET: ${QO_ADMIN_SECRET:?set it in deploy/.env}
+      QO_ADMIN_BASE_URL: ${QO_ADMIN_BASE_URL:?set it in deploy/.env}
+      QO_COOKIE_SECURE: ${QO_COOKIE_SECURE:-true}
+      QO_CLIENT_IP_HEADER: ${QO_CLIENT_IP_HEADER:-}
+      # Absolute session lifetime (1 to 24 hours) and the sign-in limits.
+      QO_ADMIN_SESSION_HOURS: ${QO_ADMIN_SESSION_HOURS:-8}
+      QO_ADMIN_LOGIN_FAILS_PER_EMAIL: ${QO_ADMIN_LOGIN_FAILS_PER_EMAIL:-5}
+      QO_ADMIN_LOGIN_FAILS_PER_IP: ${QO_ADMIN_LOGIN_FAILS_PER_IP:-20}
+      QO_LOGIN_WINDOW_SECONDS: ${QO_LOGIN_WINDOW_SECONDS:-900}
+      QO_LOGIN_BLOCK_SECONDS: ${QO_LOGIN_BLOCK_SECONDS:-900}
+      QO_SCRYPT_CONCURRENCY: ${QO_SCRYPT_CONCURRENCY:-3}
+      QO_SCRYPT_WAIT_SECONDS: ${QO_SCRYPT_WAIT_SECONDS:-8}
+    networks: [internal, edge]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8092/healthz', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  dbdata: {}
+  qofiles: {}

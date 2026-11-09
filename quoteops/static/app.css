@@ -1,0 +1,169 @@
+/* QuoteOps, Chronyx tokens. Dark by default; light follows the system setting. */
+:root {
+  color-scheme: dark light;
+  --ground: #090B10;
+  --surface: #121620;
+  --line: #2A3140;
+  --text: #F7F9FC;
+  --muted: #B8C2D1;
+  --cyan: #55DFFF;
+  --violet: #7A5CFF;
+  --red: #FF667D;
+  --on-accent: #090B10;
+}
+
+@media (prefers-color-scheme: light) {
+  /* No light palette is in the docs: this maps the same tokens to a light ground, with the
+     accents darkened enough for text contrast on white. */
+  :root {
+    --ground: #F7F9FC;
+    --surface: #FFFFFF;
+    --line: #C9D1DD;
+    --text: #090B10;
+    --muted: #4A5568;
+    --cyan: #006F8C;
+    --violet: #5638D9;
+    --red: #C4243F;
+    --on-accent: #FFFFFF;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+main { max-width: 32rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+.top, .foot {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.foot { color: var(--muted); border-top: 1px solid var(--line); }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); }
+
+a { color: var(--cyan); }
+.top a, .foot a { display: inline-flex; align-items: center; min-height: 44px; }
+
+h1 { font-size: 1.5rem; line-height: 1.25; margin: 1rem 0; }
+
+.field { margin: 0 0 1.25rem; }
+label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.hint { margin: 0 0 0.25rem; color: var(--muted); font-size: 0.875rem; }
+
+input[type="email"], input[type="password"], input[type="text"] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.has-error input { border-color: var(--red); }
+
+.check { display: grid; grid-template-columns: 44px 1fr; align-items: start; }
+.check input { width: 24px; height: 24px; margin: 10px; accent-color: var(--violet); }
+.check label { font-weight: 400; padding-top: 10px; }
+.check .error { grid-column: 2; }
+
+.error { color: var(--red); margin: 0.25rem 0 0; }
+
+button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--cyan);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button.secondary { color: var(--text); background: transparent; border: 1px solid var(--line); }
+
+:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+.banner { padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--line); }
+.banner.warn { border-color: var(--violet); }
+.banner.error { border-color: var(--red); }
+
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+
+h2 { font-size: 1.125rem; line-height: 1.3; margin: 1.75rem 0 0.5rem; }
+
+select {
+  display: block;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+input[readonly] { color: var(--muted); }
+
+.team { list-style: none; margin: 0; padding: 0; }
+.team li { border-top: 1px solid var(--line); padding: 0.75rem 0; }
+.team .who { font-weight: 600; margin: 0 0 0.25rem; overflow-wrap: anywhere; }
+.team form { margin: 0.5rem 0; }
+
+/* Stage 3a: the left navigation and the job pages. */
+.with-nav main, .with-nav .top, .with-nav .foot { max-width: 72rem; }
+.shell { max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
+.shell main { max-width: none; margin: 0; padding: 1.5rem 0 3rem; min-width: 0; }
+.side { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; padding-top: 1rem; }
+.side a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.75rem;
+          border-radius: 6px; color: var(--text); text-decoration: none; }
+.side a[aria-current="page"] { background: var(--surface); border: 1px solid var(--line); font-weight: 600; }
+@media (min-width: 52rem) {
+  .shell { display: grid; grid-template-columns: 12rem 1fr; gap: 2rem; }
+  .side { flex-direction: column; flex-wrap: nowrap; }
+  .newjob { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+}
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+a.button { display: inline-flex; align-items: center; min-height: 44px; padding: 0.5rem 1.25rem;
+           border-radius: 6px; font-weight: 600; text-decoration: none; color: var(--on-accent);
+           background: var(--cyan); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+         padding: 1rem 1.25rem; margin: 1rem 0; }
+.panel h2 { margin-top: 0; }
+table.jobs { width: 100%; border-collapse: collapse; }
+.jobs th { text-align: left; color: var(--muted); font-weight: 600; padding: 0.5rem; }
+.jobs td { border-top: 1px solid var(--line); padding: 0.75rem 0.5rem; vertical-align: top;
+           overflow-wrap: anywhere; }
+.jobs .num { text-align: right; }
+.ref { display: block; color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+h1 .ref { display: inline; font-size: 1rem; }
+.status { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; font-size: 0.875rem; }
+input[type="number"], input[type="date"], input[type="file"] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.drop { border: 2px dashed var(--line); border-radius: 8px; padding: 1.5rem 1rem; margin: 0 0 1rem; }
+.drop.has-error, .has-error input[type="file"] { border-color: var(--red); }
+.drop input[type="file"] { min-height: 6rem; }

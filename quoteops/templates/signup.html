@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}Create account{% endblock %}
+{% block main %}
+<h1>Create your company account</h1>
+<form method="post" action="/signup" novalidate>
+  {{ csrf_field(csrf) }}
+  {{ field("email", "Email address", "email", values.email, errors.email, "email",
+           "We send a link to this address. You choose your password when you open it.") }}
+  {{ field("company", "Company name", "text", values.company, errors.company, "organization") }}
+  <div class="field check{% if errors.terms %} has-error{% endif %}">
+    <input id="terms" name="terms" type="checkbox" value="yes"
+      {%- if errors.terms %} aria-invalid="true" aria-describedby="terms-error"{% endif %}>
+    <label for="terms">I accept the <a href="/terms">terms</a> and the <a href="/privacy">privacy policy</a> (version {{ terms_version }}).</label>
+    {% if errors.terms %}<p class="error" id="terms-error">{{ errors.terms }}</p>{% endif %}
+  </div>
+  <button type="submit">Create account</button>
+</form>
+<p>Already have an account? <a href="/login">Sign in</a>.</p>
+{% endblock %}

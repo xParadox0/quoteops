@@ -1,0 +1,14 @@
+# Stage 2b part 1 review notes
+
+Review of invitations (F5), roles (F6) and user management. Files in this folder are the verifier's own text, kept unchanged except that non-ASCII characters are written as \\uXXXX in the committed copy; the sha256 in each commit message is the hash of the original.
+
+## Pass 1 (reviewed head 9797baa): fail
+
+- Verifier pass 1: fail, two DEFECTS (low). (1) An Owner session stays authorized on all /team routes when the company status is unverified, because the session lookup excludes only suspended and deleting and require_verified checks only the user's email_verified_at. (2) The background invite task checks whether the address has an account and later inserts the invitation without a second check: an address that gets an account in between receives a join link instead of the notice mail. Accepting is still stopped safely by the platform-wide unique email. Observations kept: /team shows whether an address has an account (accepted, bounded by the throttles); one company can use up an address's daily allowance for all companies (accepted); the accept holds the scrypt slot while waiting for the company lock (no lock timeout). File: stage2b-verdict-pass1-fail.md (0 non-ASCII characters written as \\uXXXX). sha256 of the original: 43b8a0b672147e8d9c9b7dfffce4f61242171e16151b9595dc1881378b997f23
+- Orchestrator replay of 9797baa: 582 tests passed; RED 137 of 140 new tests fail against the stage 2a code (3 guards pass); 15 own attacks pass (cross-company by guessed ids, every non-owner role, ten forged-role variants, cap race, six parallel accepts, ten rounds of accept against revoke, expiry boundary, token storage and logs, markup and newline in the company name, Host header, busy accept, weak passwords, immediate session end on disable, byte-identical reply for new and existing address).
+
+## Pass 2 (reviewed head 302f153): PASS
+
+- Verifier pass 2: pass. Both pass-1 defects are fixed (the Owner routes need an active company; a second account check after the invitation commits, with the remaining window stated). No new defect. The file docs/evidence/stage2b-verdict.md is the verifier's own text, byte for byte, sha256 69bb24601e7e81d22669a714b2163b913b62af2b044fcf6cad16e1aeb1e14317.
+- Orchestrator replay of 302f153: 589 tests passed; the 4 new defect tests fail against the previous code; the 15 earlier attacks and 5 new ones pass (an old Owner session of an unverified company is refused on all six routes with no change, suspended and deleting sessions are already rejected by the session lookup, eight real two-company races gave no wrong mail and no orphan row, a failing second check mails no link).
+- Honest scope: the verifier never ran PostgreSQL or Docker in either pass; all database behaviour rests on the orchestrator replays. Not built in this part (by decision): administrator second factor and pages, Microsoft Graph mail backend, company profile, jobs, ownership transfer, user deletion.

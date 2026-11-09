@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ title }}{% endblock %} - QuoteOps</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body{% if nav %} class="with-nav"{% endif %}>
+<header class="top">
+  <a class="brand" href="/app">QuoteOps</a>
+</header>
+{% if nav %}
+<div class="shell">
+<nav class="side" aria-label="Main">
+  <a href="/jobs"{% if nav.current == "jobs" %} aria-current="page"{% endif %}>Quotes</a>
+  {% if nav.create %}<a href="/jobs/new"{% if nav.current == "new" %} aria-current="page"{% endif %}>New job</a>{% endif %}
+  {% if nav.owner %}<a href="/team"{% if nav.current == "team" %} aria-current="page"{% endif %}>Users</a>{% endif %}
+</nav>
+<main>
+{{ self.main() }}
+</main>
+</div>
+{% else %}
+<main>
+{% block main %}{% endblock %}
+</main>
+{% endif %}
+<footer class="foot">
+  <a href="/terms">Terms (draft)</a>
+  <a href="/privacy">Privacy (draft)</a>
+</footer>
+</body>
+</html>

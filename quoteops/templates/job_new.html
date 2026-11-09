@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_form.html" import csrf_field %}
+{% from "_job_fields.html" import job_fields, drop_zone %}
+{% block title %}New job{% endblock %}
+{% block main %}
+<h1>New job</h1>
+{% if banner %}<p class="banner error" role="alert">{{ banner }}</p>{% endif %}
+<p class="hint">{{ usage.jobs }} of {{ usage.max_jobs }} jobs this month (UTC). {{ usage.used_mb }} MB of {{ usage.max_company_mb }} MB used by drawings.</p>
+{# The csrf field comes first and the file last: the server checks the token before it stores a
+   byte of the file, and a refused file still finds every typed field. #}
+<form method="post" action="/jobs/upload" enctype="multipart/form-data" class="newjob">
+  {{ csrf_field(csrf) }}
+  <section class="panel details">
+    <h2>Job details</h2>
+    <p class="hint">Five fields and one drawing. More drawings can be added on the job page.</p>
+    {{ job_fields(values, errors, customers, today) }}
+  </section>
+  <section class="panel">
+    {{ drop_zone(errors, usage, types) }}
+    <button type="submit">Create job</button>
+    <p class="hint">Add a drawing and enter a customer, a part name and a quantity to create the job.</p>
+  </section>
+</form>
+{% endblock %}

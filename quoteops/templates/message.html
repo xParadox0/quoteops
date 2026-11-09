@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ title }}</h1>
+<p>{{ text }}</p>
+{% if link %}<p><a href="{{ link[0] }}">{{ link[1] }}</a></p>{% endif %}
+{% endblock %}

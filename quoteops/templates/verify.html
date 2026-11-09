@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}Finish signing up{% endblock %}
+{% block main %}
+<h1>Finish signing up</h1>
+<p>Choose the password for your account, check the company name and accept the terms.</p>
+<form method="post" action="/verify" novalidate>
+  {{ csrf_field(csrf) }}
+  <input type="hidden" name="token" value="{{ token }}">
+  {{ field("password", "Password", "password", "", errors.password, "new-password",
+           "10 to 128 characters. A few unrelated words work well.") }}
+  {{ field("company", "Company name", "text", values.company, errors.company, "organization") }}
+  <div class="field check{% if errors.terms %} has-error{% endif %}">
+    <input id="terms" name="terms" type="checkbox" value="yes"
+      {%- if errors.terms %} aria-invalid="true" aria-describedby="terms-error"{% endif %}>
+    <label for="terms">I accept the <a href="/terms">terms</a> and the <a href="/privacy">privacy policy</a> (version {{ terms_version }}).</label>
+    {% if errors.terms %}<p class="error" id="terms-error">{{ errors.terms }}</p>{% endif %}
+  </div>
+  <button type="submit">Finish signing up</button>
+</form>
+{% endblock %}

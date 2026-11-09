@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}New password{% endblock %}
+{% block main %}
+<h1>Choose a new password</h1>
+<form method="post" action="/reset" novalidate>
+  {{ csrf_field(csrf) }}
+  <input type="hidden" name="token" value="{{ token }}">
+  {{ field("password", "New password", "password", "", errors.password, "new-password",
+           "10 to 128 characters. A few unrelated words work well.") }}
+  <button type="submit">Save the new password</button>
+</form>
+{% endblock %}

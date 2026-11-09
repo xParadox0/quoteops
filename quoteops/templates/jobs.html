@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Quotes{% endblock %}
+{% block main %}
+<div class="heading">
+  <h1>Quotes</h1>
+  {% if can_create %}<a class="button" href="/jobs/new">New job</a>{% endif %}
+</div>
+<p class="hint">{{ usage.jobs }} of {{ usage.max_jobs }} jobs this month (UTC). {{ usage.used_mb }} MB of {{ usage.max_company_mb }} MB used by drawings.</p>
+<section class="panel">
+  <h2>Jobs</h2>
+  {% if jobs %}
+  <p class="hint">{{ jobs|length }} job{{ "s" if jobs|length != 1 }}, newest first. Prices arrive in a later stage.</p>
+  <table class="jobs">
+    <thead>
+      <tr><th scope="col">Part</th><th scope="col">Customer</th><th scope="col" class="num">Qty</th><th scope="col">Due date</th><th scope="col">Status</th><th scope="col" class="num">Drawings</th></tr>
+    </thead>
+    <tbody>
+    {% for j in jobs %}
+      <tr>
+        <td><a href="/jobs/{{ j.ref }}">{{ j.part }}</a><span class="ref">{{ j.ref }}</span></td>
+        <td>{{ j.customer }}</td>
+        <td class="num">{{ j.qty }}</td>
+        <td>{{ j.due or "none" }}</td>
+        <td><span class="status">{{ j.status }}</span></td>
+        <td class="num">{{ j.drawings }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No jobs yet.{% if can_create %} <a href="/jobs/new">Create the first job</a> with its drawing.{% endif %}</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}Reset password{% endblock %}
+{% block main %}
+<h1>Reset your password</h1>
+<p>Enter the email address of your account. We send a link to choose a new password.</p>
+<form method="post" action="/forgot" novalidate>
+  {{ csrf_field(csrf) }}
+  {{ field("email", "Email address", "email", values.email, errors.email, "email") }}
+  <button type="submit">Send the link</button>
+</form>
+<p><a href="/login">Back to sign in</a></p>
+{% endblock %}

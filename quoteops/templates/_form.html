@@ -1,0 +1,14 @@
+{# One labelled input with its error text right below it. #}
+{% macro field(name, label, type="text", value="", error=None, autocomplete=None, hint=None) %}
+<div class="field{% if error %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}</label>
+  {% if hint %}<p class="hint" id="{{ name }}-hint">{{ hint }}</p>{% endif %}
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}"
+    {%- if value %} value="{{ value }}"{% endif %}
+    {%- if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}
+    {%- if error %} aria-invalid="true" aria-describedby="{{ name }}-error"{% elif hint %} aria-describedby="{{ name }}-hint"{% endif %}>
+  {% if error %}<p class="error" id="{{ name }}-error">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro csrf_field(token) %}<input type="hidden" name="csrf" value="{{ token }}">{% endmacro %}

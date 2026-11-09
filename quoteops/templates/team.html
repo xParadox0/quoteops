@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}Team{% endblock %}
+{% block main %}
+<h1>Team of {{ company }}</h1>
+{% if flash %}<p class="banner" role="status">{{ flash }}</p>{% endif %}
+<p>{{ used }} of {{ cap }} users, counting pending invitations.</p>
+
+<h2>Users</h2>
+<ul class="team">
+{% for u in users %}
+  <li>
+    <p class="who">{{ u.email }}</p>
+    <dl class="facts">
+      <dt>Role</dt><dd>{{ u.role }}</dd>
+      <dt>Access</dt><dd>{{ "disabled" if u.disabled else "active" }}</dd>
+      <dt>Email verified</dt><dd>{{ "yes" if u.verified else "no" }}</dd>
+    </dl>
+    {% if not u.locked %}
+    <form method="post" action="/team/role">
+      {{ csrf_field(csrf) }}
+      <input type="hidden" name="user" value="{{ u.id }}">
+      <label for="role-{{ u.id }}">New role for {{ u.email }}</label>
+      <select id="role-{{ u.id }}" name="role">
+        {% for r in roles %}
+        <option value="{{ r }}"{% if r == u.role %} selected{% endif %}>{{ r }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="secondary">Change the role</button>
+    </form>
+    <form method="post" action="/team/{{ 'enable' if u.disabled else 'disable' }}">
+      {{ csrf_field(csrf) }}
+      <input type="hidden" name="user" value="{{ u.id }}">
+      <button type="submit" class="secondary">{{ "Enable" if u.disabled else "Disable" }} {{ u.email }}</button>
+    </form>
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+
+<h2>Pending invitations</h2>
+{% if invites %}
+<ul class="team">
+{% for i in invites %}
+  <li>
+    <p class="who">{{ i.email }}</p>
+    <dl class="facts">
+      <dt>Role</dt><dd>{{ i.role }}</dd>
+      <dt>Expires</dt><dd>{{ i.expires }}</dd>
+    </dl>
+    <form method="post" action="/team/invite/revoke">
+      {{ csrf_field(csrf) }}
+      <input type="hidden" name="ref" value="{{ i.ref }}">
+      <button type="submit" class="secondary">Revoke the invitation for {{ i.email }}</button>
+    </form>
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p>No pending invitations.</p>
+{% endif %}
+
+<h2>Invite a user</h2>
+<form method="post" action="/team/invite" novalidate>
+  {{ csrf_field(csrf) }}
+  {{ field("email", "Email address", "email", "", None, "off",
+           "We email a link that works for 7 days and only once. An address that already has a QuoteOps account cannot join a second company.") }}
+  <div class="field">
+    <label for="role">Role</label>
+    <select id="role" name="role">
+      {% for r in roles %}
+      <option value="{{ r }}">{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit">Send the invitation</button>
+</form>
+<p><a href="/app">Back</a></p>
+{% endblock %}

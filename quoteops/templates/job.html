@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_form.html" import csrf_field %}
+{% from "_job_fields.html" import job_fields, drop_zone %}
+{% block title %}{{ job.ref }}{% endblock %}
+{% block main %}
+<h1>{{ job.part }} <span class="ref">{{ job.ref }}</span></h1>
+{% if banner %}<p class="banner error" role="alert">{{ banner }}</p>{% endif %}
+<dl class="facts">
+  <dt>Customer</dt><dd>{{ job.customer }}</dd>
+  <dt>Quantity</dt><dd>{{ job.qty }}</dd>
+  <dt>Material</dt><dd>{{ job.material or "not set" }}</dd>
+  <dt>Due date</dt><dd>{{ job.due or "not set" }}</dd>
+  <dt>Status</dt><dd>{{ job.status }}</dd>
+  <dt>Created</dt><dd>{{ job.created }}</dd>
+</dl>
+
+<section class="panel">
+<h2>Drawings</h2>
+{% if drawings %}
+<ul class="team">
+{% for d in drawings %}
+  <li>
+    <p class="who"><a href="/jobs/{{ job.ref }}/drawings/{{ d.id }}" download>{{ d.name or "drawing" }}</a></p>
+    <dl class="facts">
+      <dt>Type</dt><dd>{{ d.type }}</dd>
+      <dt>Size</dt><dd>{{ d.size }} MB</dd>
+      <dt>Uploaded</dt><dd>{{ d.at }}</dd>
+    </dl>
+    {% if can_delete %}
+    <form method="post" action="/jobs/{{ job.ref }}/drawings/{{ d.id }}/delete">
+      {{ csrf_field(csrf) }}
+      <button type="submit" class="secondary">Delete {{ d.name or "drawing" }}</button>
+    </form>
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p>This job has no drawing.</p>
+{% endif %}
+<p class="hint">Drawings are downloaded as files; they are never opened in the browser here.</p>
+{% if can_upload %}
+<form method="post" action="/jobs/upload?job={{ job.ref }}" enctype="multipart/form-data">
+  {{ csrf_field(csrf) }}
+  {{ drop_zone(errors, usage, types, prefix="add-") }}
+  <button type="submit">Add the drawing</button>
+</form>
+{% endif %}
+</section>
+
+{% if can_edit %}
+<section class="panel">
+<h2>Change the job</h2>
+<form method="post" action="/jobs/{{ job.ref }}" novalidate>
+  {{ csrf_field(csrf) }}
+  {{ job_fields(values, errors, customers, today, prefix="edit-") }}
+  <button type="submit">Save the changes</button>
+</form>
+</section>
+{% endif %}
+<p><a href="/jobs">Back to the quotes</a></p>
+{% endblock %}

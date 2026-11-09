@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, csrf_field %}
+{% block title %}Join {{ company }}{% endblock %}
+{% block main %}
+<h1>Join {{ company }}</h1>
+<p>You were invited to join {{ company }} on QuoteOps as {{ role }}. Choose your password and accept the terms.</p>
+<form method="post" action="/invite" novalidate>
+  {{ csrf_field(csrf) }}
+  <input type="hidden" name="token" value="{{ token }}">
+  <div class="field">
+    <label for="email">Email address</label>
+    <input id="email" type="email" value="{{ email }}" readonly autocomplete="username">
+  </div>
+  {{ field("password", "Password", "password", "", errors.password, "new-password",
+           "10 to 128 characters. A few unrelated words work well.") }}
+  <div class="field check{% if errors.terms %} has-error{% endif %}">
+    <input id="terms" name="terms" type="checkbox" value="yes"
+      {%- if errors.terms %} aria-invalid="true" aria-describedby="terms-error"{% endif %}>
+    <label for="terms">I accept the <a href="/terms">terms</a> and the <a href="/privacy">privacy policy</a> (version {{ terms_version }}).</label>
+    {% if errors.terms %}<p class="error" id="terms-error">{{ errors.terms }}</p>{% endif %}
+  </div>
+  <button type="submit">Join</button>
+</form>
+{% endblock %}

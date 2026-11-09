@@ -1,0 +1,51 @@
+{# The five job fields, used by the new job form and the edit form. #}
+{% from "_form.html" import field %}
+{% macro job_fields(values, errors, customers, today, prefix="") %}
+<div class="field{% if errors.customer %} has-error{% endif %}">
+  <label for="{{ prefix }}customer">Customer</label>
+  <p class="hint" id="{{ prefix }}customer-hint">Type the customer's name; earlier customers are suggested.</p>
+  <input id="{{ prefix }}customer" name="customer" type="text" maxlength="120" required list="{{ prefix }}customers" autocomplete="off"
+    {%- if values.customer %} value="{{ values.customer }}"{% endif %}
+    {%- if errors.customer %} aria-invalid="true" aria-describedby="{{ prefix }}customer-error"{% else %} aria-describedby="{{ prefix }}customer-hint"{% endif %}>
+  <datalist id="{{ prefix }}customers">
+  {% for c in customers %}<option value="{{ c }}">{% endfor %}
+  </datalist>
+  {% if errors.customer %}<p class="error" id="{{ prefix }}customer-error">{{ errors.customer }}</p>{% endif %}
+</div>
+{{ text_field(prefix, "part", "Part name", values.part, errors.part, 120, True) }}
+<div class="field{% if errors.qty %} has-error{% endif %}">
+  <label for="{{ prefix }}qty">Quantity</label>
+  <input id="{{ prefix }}qty" name="qty" type="number" min="1" max="1000000" step="1" inputmode="numeric" required placeholder="Pieces"
+    {%- if values.qty %} value="{{ values.qty }}"{% endif %}
+    {%- if errors.qty %} aria-invalid="true" aria-describedby="{{ prefix }}qty-error"{% endif %}>
+  {% if errors.qty %}<p class="error" id="{{ prefix }}qty-error">{{ errors.qty }}</p>{% endif %}
+</div>
+{{ text_field(prefix, "material", "Material (optional)", values.material, errors.material, 100, False) }}
+<div class="field{% if errors.due %} has-error{% endif %}">
+  <label for="{{ prefix }}due">Due date (optional)</label>
+  <input id="{{ prefix }}due" name="due" type="date" min="{{ today }}"
+    {%- if values.due %} value="{{ values.due }}"{% endif %}
+    {%- if errors.due %} aria-invalid="true" aria-describedby="{{ prefix }}due-error"{% endif %}>
+  {% if errors.due %}<p class="error" id="{{ prefix }}due-error">{{ errors.due }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro text_field(prefix, name, label, value, error, maxlength, required) %}
+<div class="field{% if error %} has-error{% endif %}">
+  <label for="{{ prefix }}{{ name }}">{{ label }}</label>
+  <input id="{{ prefix }}{{ name }}" name="{{ name }}" type="text" maxlength="{{ maxlength }}"{% if required %} required{% endif %}
+    {%- if value %} value="{{ value }}"{% endif %}
+    {%- if error %} aria-invalid="true" aria-describedby="{{ prefix }}{{ name }}-error"{% endif %}>
+  {% if error %}<p class="error" id="{{ prefix }}{{ name }}-error">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro drop_zone(errors, usage, types, prefix="") %}
+<div class="drop{% if errors.file %} has-error{% endif %}">
+  <label for="{{ prefix }}file">Drawing</label>
+  <p class="hint" id="{{ prefix }}file-hint">Drop a drawing here or choose a file: {{ types }}, one file, up to {{ usage.max_file_mb }} MB.</p>
+  <input id="{{ prefix }}file" name="file" type="file" required accept=".pdf,.dxf,.png,.jpg,.jpeg"
+    {%- if errors.file %} aria-invalid="true" aria-describedby="{{ prefix }}file-error"{% else %} aria-describedby="{{ prefix }}file-hint"{% endif %}>
+  {% if errors.file %}<p class="error" id="{{ prefix }}file-error">{{ errors.file }}</p>{% endif %}
+</div>
+{% endmacro %}
